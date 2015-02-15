@@ -17,19 +17,24 @@ namespace CodeCracker.CSharp.Usage
     [ExportCodeFixProvider("DisposableFieldNotDisposedCodeFixProvider", LanguageNames.CSharp), Shared]
     public class DisposableFieldNotDisposedCodeFixProvider : CodeFixProvider
     {
-        public sealed override ImmutableArray<string> GetFixableDiagnosticIds() =>
-            ImmutableArray.Create(DiagnosticId.DisposableFieldNotDisposed_Created.ToDiagnosticId(), DiagnosticId.DisposableFieldNotDisposed_Returned.ToDiagnosticId());
+        public override ImmutableArray<string> FixableDiagnosticIds
+        {
+            get
+            {
+                return ImmutableArray.Create(DiagnosticId.DisposableFieldNotDisposed_Created.ToDiagnosticId(), DiagnosticId.DisposableFieldNotDisposed_Returned.ToDiagnosticId());
+            }
+        }
 
         public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
-        public sealed override async Task ComputeFixesAsync(CodeFixContext context)
+        public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var diagnostic = context.Diagnostics.First();
             var diagnosticSpan = diagnostic.Location.SourceSpan;
             var variableDeclarators = root.FindToken(diagnosticSpan.Start).Parent.AncestorsAndSelf().OfType<VariableDeclaratorSyntax>();
             foreach (var variableDeclarator in variableDeclarators)
-                context.RegisterFix(CodeAction.Create($"Dispose field '{variableDeclarator.Identifier.Value}'", c => MakeThrowAsInnerAsync(context.Document, variableDeclarator, c)), diagnostic);
+                context.RegisterCodeFix(CodeAction.Create($"Dispose field '{variableDeclarator.Identifier.Value}'", c => MakeThrowAsInnerAsync(context.Document, variableDeclarator, c)), diagnostic);
         }
 
         private async Task<Document> MakeThrowAsInnerAsync(Document document, VariableDeclaratorSyntax variableDeclarator, CancellationToken cancellationToken)

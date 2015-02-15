@@ -16,9 +16,12 @@ namespace CodeCracker.CSharp.Refactoring
     [ExportCodeFixProvider("AddBracesToSwitchCaseCodeFixCodeFixProvider", LanguageNames.CSharp), Shared]
     public class AddBracesToSwitchSectionsCodeFix : CodeFixProvider
     {
-        public override ImmutableArray<string> GetFixableDiagnosticIds()
+        public override ImmutableArray<string> FixableDiagnosticIds
         {
-            return ImmutableArray.Create(DiagnosticId.AddBracesToSwitchSections.ToDiagnosticId());
+            get
+            {
+                return ImmutableArray.Create(DiagnosticId.AddBracesToSwitchSections.ToDiagnosticId());
+            }
         }
 
         public sealed override FixAllProvider GetFixAllProvider()
@@ -26,10 +29,10 @@ namespace CodeCracker.CSharp.Refactoring
             return WellKnownFixAllProviders.BatchFixer;
         }
 
-        public override Task ComputeFixesAsync(CodeFixContext context)
+        public override Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var diagnostic = context.Diagnostics.First();
-            context.RegisterFix(CodeAction.Create("Add braces to each switch section", ct => AddBracesAsync(context, ct)), diagnostic);
+            context.RegisterCodeFix(CodeAction.Create("Add braces to each switch section", ct => AddBracesAsync(context, ct)), diagnostic);
             return Task.FromResult(0);
         }
 

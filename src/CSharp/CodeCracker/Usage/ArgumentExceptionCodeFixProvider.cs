@@ -8,18 +8,24 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System;
 
 namespace CodeCracker.CSharp.Usage
 {
     [ExportCodeFixProvider("CodeCrackerArgumentExceptionCodeFixProvider", LanguageNames.CSharp), Shared]
     public class ArgumentExceptionCodeFixProvider : CodeFixProvider
     {
-        public sealed override ImmutableArray<string> GetFixableDiagnosticIds() =>
-            ImmutableArray.Create(DiagnosticId.ArgumentException.ToDiagnosticId());
+        public override ImmutableArray<string> FixableDiagnosticIds
+        {
+            get
+            {
+                return ImmutableArray.Create(DiagnosticId.ArgumentException.ToDiagnosticId());
+            }
+        }
 
         public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
-        public sealed override async Task ComputeFixesAsync(CodeFixContext context)
+        public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var diagnostic = context.Diagnostics.First();
@@ -30,7 +36,7 @@ namespace CodeCracker.CSharp.Usage
             foreach (var param in parameters)
             {
                 var message = "Use '" + param + "'";
-                context.RegisterFix(CodeAction.Create(message, c => FixParamAsync(context.Document, objectCreation, param, c)), diagnostic);
+                context.RegisterCodeFix(CodeAction.Create(message, c => FixParamAsync(context.Document, objectCreation, param, c)), diagnostic);
             }
         }
 

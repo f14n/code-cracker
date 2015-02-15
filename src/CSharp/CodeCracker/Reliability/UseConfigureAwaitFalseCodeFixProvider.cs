@@ -14,12 +14,17 @@ namespace CodeCracker.CSharp.Reliability
     [ExportCodeFixProvider("CodeCrackerUseConfigureAwaitFalseCodeFixProvider", LanguageNames.CSharp), Shared]
     public class UseConfigureAwaitFalseCodeFixProvider : CodeFixProvider
     {
-        public override ImmutableArray<string> GetFixableDiagnosticIds() =>
-            ImmutableArray.Create(DiagnosticId.UseConfigureAwaitFalse.ToDiagnosticId());
+        public override ImmutableArray<string> FixableDiagnosticIds
+        {
+            get
+            {
+                return ImmutableArray.Create(DiagnosticId.UseConfigureAwaitFalse.ToDiagnosticId());
+            }
+        }
 
         public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
-        public override async Task ComputeFixesAsync(CodeFixContext context)
+        public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var diagnostic = context.Diagnostics.First();
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
@@ -38,8 +43,8 @@ namespace CodeCracker.CSharp.Reliability
             var newRoot = root.ReplaceNode(awaitExpression.Expression, newExpression);
             var newDocument = context.Document.WithSyntaxRoot(newRoot);
 
-            context.RegisterFix(
-                CodeAction.Create("Use ConfigureAwait(false)", newDocument),
+            context.RegisterCodeFix(
+                CodeAction.Create("Use ConfigureAwait(false)", ct => Task.FromResult(newDocument)),
                 diagnostic);
         }
     }

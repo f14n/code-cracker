@@ -14,8 +14,13 @@ namespace CodeCracker.CSharp.Refactoring
 {
     public abstract class BaseAllowMembersOrderingCodeFixProvider : CodeFixProvider
     {
-        public override ImmutableArray<string> GetFixableDiagnosticIds() =>
-            ImmutableArray.Create(DiagnosticId.AllowMembersOrdering.ToDiagnosticId());
+        public override ImmutableArray<string> FixableDiagnosticIds
+        {
+            get
+            {
+                return ImmutableArray.Create(DiagnosticId.AllowMembersOrdering.ToDiagnosticId());
+            }
+        }
 
         public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
@@ -26,7 +31,7 @@ namespace CodeCracker.CSharp.Refactoring
             this.codeActionDescription = codeActionDescription;
         }
 
-        public override async Task ComputeFixesAsync(CodeFixContext context)
+        public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var diagnostic = context.Diagnostics.First();
@@ -38,7 +43,7 @@ namespace CodeCracker.CSharp.Refactoring
 
             var newDocument = await AllowMembersOrderingAsync(context.Document, typeDeclarationSyntax, context.CancellationToken);
             if (newDocument != null)
-                context.RegisterFix(CodeAction.Create(string.Format(codeActionDescription, typeDeclarationSyntax.Identifier.ValueText), newDocument), diagnostic);
+                context.RegisterCodeFix(CodeAction.Create(string.Format(codeActionDescription, typeDeclarationSyntax.Identifier.ValueText), ct => Task.FromResult(newDocument)), diagnostic);
         }
 
         private async Task<Document> AllowMembersOrderingAsync(Document document, TypeDeclarationSyntax typeDeclarationSyntax, CancellationToken cancellationToken)

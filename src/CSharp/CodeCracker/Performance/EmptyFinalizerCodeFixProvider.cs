@@ -14,20 +14,24 @@ namespace CodeCracker.CSharp.Performance
     [ExportCodeFixProvider("CodeCrackerEmptyFinalizerCodeFixProvider", LanguageNames.CSharp), Shared]
     public class EmptyFinalizerCodeFixProvider : CodeFixProvider
     {
-
-        public sealed override ImmutableArray<string> GetFixableDiagnosticIds() =>
-            ImmutableArray.Create(DiagnosticId.EmptyFinalizer.ToDiagnosticId());
+        public override ImmutableArray<string> FixableDiagnosticIds
+        {
+            get
+            {
+                return ImmutableArray.Create(DiagnosticId.EmptyFinalizer.ToDiagnosticId());
+            }
+        }
 
         public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
-        public sealed override async Task ComputeFixesAsync(CodeFixContext context)
+        public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var diagnostic = context.Diagnostics.First();
             var sourceSpan = diagnostic.Location.SourceSpan;
             var finalizer = root.FindToken(sourceSpan.Start).Parent.AncestorsAndSelf().OfType<DestructorDeclarationSyntax>().First();
 
-            context.RegisterFix(
+            context.RegisterCodeFix(
                 CodeAction.Create("Remove finalizer", ct => RemoveThrowAsync(context.Document, finalizer, ct)), diagnostic);
         }
 

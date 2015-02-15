@@ -22,7 +22,7 @@ namespace CodeCracker.CSharp.Refactoring
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
             var node = root.FindNode(context.Span);
 
-            if (node.CSharpKind() != SyntaxKind.StringLiteralExpression)
+            if (node.Kind() != SyntaxKind.StringLiteralExpression)
             {
                 return;
             }

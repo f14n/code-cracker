@@ -9,24 +9,30 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System;
 
 namespace CodeCracker.CSharp.Refactoring
 {
     [ExportCodeFixProvider("CodeCrackerInvertForCodeFixProvider", LanguageNames.CSharp), Shared]
     public class InvertForCodeFixProvider : CodeFixProvider
     {
-        public sealed override ImmutableArray<string> GetFixableDiagnosticIds() =>
-            ImmutableArray.Create(DiagnosticId.InvertFor.ToDiagnosticId());
+        public override ImmutableArray<string> FixableDiagnosticIds
+        {
+            get
+            {
+                return ImmutableArray.Create(DiagnosticId.InvertFor.ToDiagnosticId());
+            }
+        }
 
         public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
-        public sealed override async Task ComputeFixesAsync(CodeFixContext context)
+        public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
             var diagnostic = context.Diagnostics.First();
             var diagnosticSpan = diagnostic.Location.SourceSpan;
             var @for = root.FindToken(diagnosticSpan.Start).Parent.AncestorsAndSelf().OfType<ForStatementSyntax>().First();
-            context.RegisterFix(CodeAction.Create("Invert For Loop.", c => InvertForAsync(context.Document, @for, c)), diagnostic);
+            context.RegisterCodeFix(CodeAction.Create("Invert For Loop.", c => InvertForAsync(context.Document, @for, c)), diagnostic);
         }
 
         private async Task<Document> InvertForAsync(Document document, ForStatementSyntax @for, CancellationToken cancellationToken)
